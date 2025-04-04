@@ -126,9 +126,8 @@ vim.opt.showmode = false
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.schedule(function()
-  vim.opt.clipboard = 'unnamedplus'
-end)
+
+vim.opt.clipboard = 'unnamedplus'
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -215,6 +214,11 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+
+-- SET THE BACKGROUND TO BE TRANSPARANT --
+vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+vim.api.nvim_set_hl(0, 'NonText', { bg = 'none' })
+
 vim.api.nvim_set_keymap('n', '<leader>e', ':lua MiniFiles.open()<CR>', { noremap = true, silent = true })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -259,15 +263,64 @@ require('lazy').setup({
   },
 
   {
-  'nvimdev/dashboard-nvim',
-  event = 'VimEnter',
-  config = function()
-    require('dashboard').setup {
-      -- config
-    }
-  end,
-  dependencies = { {'nvim-tree/nvim-web-devicons'}}
-},
+    'nvimdev/dashboard-nvim',
+    event = 'VimEnter',
+    config = function()
+      require('dashboard').setup {
+        theme = 'hyper',
+        config = {
+          header = {
+            [[     ***** *     **                              ***** *      **                           ]],
+            [[  ******  **    **** *                        ******  *    *****     *                     ]],
+            [[ **   *  * **    ****                        **   *  *       *****  ***                    ]],
+            [[*    *  *  **    * *                        *    *  **       * **    *                     ]],
+            [[    *  *    **   *                  ****        *  ***      *                              ]],
+            [[   ** **    **   *        ***      * ***  *    **   **      *      ***     *** **** ****   ]],
+            [[   ** **     **  *       * ***    *   ****     **   **      *       ***     *** **** ***  *]],
+            [[   ** **     **  *      *   ***  **    **      **   **     *         **      **  **** **** ]],
+            [[   ** **      ** *     **    *** **    **      **   **     *         **      **   **   **  ]],
+            [[   ** **      ** *     ********  **    **      **   **     *         **      **   **   **  ]],
+            [[   *  **       ***     *******   **    **       **  **    *          **      **   **   **  ]],
+            [[      *        ***     **        **    **        ** *     *          **      **   **   **  ]],
+            [[  ****          **     ****    *  ******          ***     *          **      **   **   **  ]],
+            [[ *  *****               *******    ****            *******           *** *   ***  ***  *** ]],
+            [[*     **                 *****                       ***              ***     ***  ***  ***]],
+            [[*                                                                                          ]],
+            [[ **                                                                                        ]],
+          }, --your header
+          shortcut = {
+            { desc = '󰊳 Update', group = '@property', action = 'Lazy update', key = 'u' },
+            {
+              icon = ' ',
+              icon_hl = '@variable',
+              desc = 'Files',
+              group = 'Label',
+              action = 'Telescope find_files',
+              key = 'f',
+            },
+            {
+              desc = ' Apps',
+              group = 'DiagnosticHint',
+              action = 'Telescope app',
+              key = 'a',
+            },
+            {
+              desc = ' dotfiles',
+              group = 'Number',
+              action = 'Telescope dotfiles',
+              key = 'd',
+            },
+          },
+          footer = {
+            [[]],
+            [[It's alot more fun to be competent.]],
+            [[]],
+          },
+        },
+      }
+    end,
+    dependencies = { { 'nvim-tree/nvim-web-devicons' } },
+  },
 
   {
     'windwp/nvim-autopairs',
@@ -662,6 +715,8 @@ require('lazy').setup({
         pyright = {},
         html = {},
         cssls = {},
+        gdtoolkit = {},
+
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -686,6 +741,13 @@ require('lazy').setup({
             },
           },
         },
+      }
+
+      -- GDScript setup (separate from mason since it's not available there)
+      require('lspconfig').gdscript.setup {
+        capabilities = capabilities,
+        cmd = { 'godot', '--headless', '--editor', '--script-language', 'GDScript' },
+        filetypes = { 'gdscript', 'gd', 'godot' },
       }
 
       -- Ensure the servers and tools above are installed
@@ -818,9 +880,10 @@ require('lazy').setup({
         -- No, but seriously. Please read `:help ins-completion`, it is really good!
         mapping = cmp.mapping.preset.insert {
           -- Select the [n]ext item
-          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-j>'] = cmp.mapping.select_next_item(),
+
           -- Select the [p]revious item
-          ['<C-p>'] = cmp.mapping.select_prev_item(),
+          ['<C-k>'] = cmp.mapping.select_prev_item(),
 
           -- Scroll the documentation window [b]ack / [f]orward
           ['<C-b>'] = cmp.mapping.scroll_docs(-4),
@@ -830,6 +893,7 @@ require('lazy').setup({
           --  This will auto-import if your LSP supports it.
           --  This will expand snippets if the LSP sent a snippet.
           ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['enter'] = cmp.mapping.confirm { select = true },
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
@@ -883,13 +947,14 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+    -- 'ellisonleao/gruvbox.nvim',
     'https://github.com/rose-pine/neovim.git',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'rose-pine'
+      vim.cmd.colorscheme 'rose-pine-moon'
       vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
 
       -- You can configure highlights by doing something like:
@@ -943,7 +1008,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'gdscript', 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
